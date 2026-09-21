@@ -1,0 +1,8 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic-settings==2.7.1
+httpx==0.28.1
+websockets==14.1
+protobuf==5.29.2
+bcrypt==4.2.1
+PyJWT==2.9.0

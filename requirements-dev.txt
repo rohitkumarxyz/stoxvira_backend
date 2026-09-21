@@ -1,0 +1,7 @@
+-r requirements.txt
+pytest==8.3.4
+pytest-asyncio==0.25.2
+respx==0.22.0
+
+# Only needed to regenerate app/services/market/proto/*_pb2.py
+grpcio-tools==1.68.1
