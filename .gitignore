@@ -1,11 +1,36 @@
+# Python
 __pycache__/
 *.py[cod]
 *.egg-info/
+build/
+dist/
+
+# Virtualenvs
 .venv/
 venv/
+env/
+
+# Secrets & credentials — never commit these
 .env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+credentials.json
+secrets.json
 .tokens/
+
+# Caches
 .cache/
 .pytest_cache/
 .mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
+
+# Editors / OS
 .DS_Store
+.idea/
+*.swp
