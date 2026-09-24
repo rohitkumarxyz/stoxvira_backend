@@ -5,7 +5,14 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from app.core.config import Settings, get_settings
-from app.services.ai import AiAnalysisError, analyze_stock, stream_stock_analysis
+from app.services.ai import (
+    MAX_PREDICTION_DAYS,
+    MIN_PREDICTION_DAYS,
+    AiAnalysisError,
+    analyze_stock,
+    predict_stock,
+    stream_stock_analysis,
+)
 from app.services.market.service import MarketService, get_market_service
 
 router = APIRouter(prefix="/ai", tags=["ai"])
@@ -21,6 +28,31 @@ class AnalysisRequest(BaseModel):
 
 class AnalysisResponse(BaseModel):
     answer: str
+
+
+class PredictionRequest(BaseModel):
+    symbol: str = Field(min_length=1, max_length=40)
+    name: str = Field(min_length=1, max_length=160)
+    days: int = Field(default=1, ge=MIN_PREDICTION_DAYS, le=MAX_PREDICTION_DAYS)
+
+
+class PredictionDay(BaseModel):
+    day: int
+    date: str
+    predicted_price: float
+    change_percent: float
+    confidence: str
+    note: str = ""
+
+
+class PredictionResponse(BaseModel):
+    symbol: str
+    name: str
+    last_price: float
+    trend: str
+    summary: str
+    days: list[PredictionDay]
+    disclaimer: str
 
 
 @router.post("/analyze", response_model=AnalysisResponse)
@@ -45,6 +77,28 @@ async def analyze(
             detail=str(exc),
         ) from exc
     return AnalysisResponse(answer=answer)
+
+
+@router.post("/predict", response_model=PredictionResponse)
+async def predict(
+    body: PredictionRequest,
+    settings: Settings = Depends(get_settings),
+    market: MarketService = Depends(get_market_service),
+) -> PredictionResponse:
+    try:
+        result = await predict_stock(
+            settings=settings,
+            market=market,
+            symbol=body.symbol.strip().upper(),
+            name=body.name.strip(),
+            days=body.days,
+        )
+    except AiAnalysisError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(exc),
+        ) from exc
+    return PredictionResponse(**result)
 
 
 @router.post("/analyze/stream")
